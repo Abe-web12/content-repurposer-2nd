@@ -5,6 +5,6 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  outputFileTracingRoot: __dirname,
+  outputFileTracingRoot: process.cwd(),
 };
 module.exports = nextConfig;
