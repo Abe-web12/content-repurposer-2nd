@@ -1,204 +1,488 @@
-# RepurposeAI
+<div align="center">
+  <br />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://placehold.co/160x160/1e1b4b/6366f1?text=RAI&font=montserrat">
+    <img alt="RepurposeAI" src="https://placehold.co/160x160/6366f1/ffffff?text=RAI&font=montserrat" width="160">
+  </picture>
+  <br />
+  <h1 align="center">RepurposeAI</h1>
+  <p align="center">AI-powered content repurposing engine. Transform YouTube videos, blog posts, and podcasts into platform-optimized LinkedIn posts, carousels, and X threads — matched to your unique writing voice.</p>
 
-AI-powered content repurposing tool. Turn YouTube videos, blog posts, and podcasts into LinkedIn posts, carousels, and X threads matched to your writing voice.
+  <p align="center">
+    <a href="#features"><strong>Features</strong></a> ·
+    <a href="#tech-stack"><strong>Tech Stack</strong></a> ·
+    <a href="#architecture"><strong>Architecture</strong></a> ·
+    <a href="#getting-started"><strong>Quick Start</strong></a> ·
+    <a href="#environment-variables"><strong>Configuration</strong></a> ·
+    <a href="#deployment"><strong>Deployment</strong></a>
+  </p>
+
+  <p align="center">
+    <img src="https://img.shields.io/badge/Next.js_15-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 15">
+    <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+    <img src="https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma">
+    <img src="https://img.shields.io/badge/Neon-00E599?style=for-the-badge&logo=neon&logoColor=black" alt="Neon">
+    <img src="https://img.shields.io/badge/Upstash_Redis-00E9A3?style=for-the-badge&logo=redis&logoColor=white" alt="Upstash Redis">
+    <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
+    <img src="https://img.shields.io/badge/Stripe-008CDD?style=for-the-badge&logo=stripe&logoColor=white" alt="Stripe">
+    <img src="https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white" alt="Cloudinary">
+    <img src="https://img.shields.io/badge/MorphLLM-6C47FF?style=for-the-badge&logo=openai&logoColor=white" alt="MorphLLM">
+    <img src="https://img.shields.io/badge/Resend-000000?style=for-the-badge&logo=resend&logoColor=white" alt="Resend">
+    <img src="https://img.shields.io/badge/Sentry-362D59?style=for-the-badge&logo=sentry&logoColor=white" alt="Sentry">
+    <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel">
+  </p>
+
+  <br />
+</div>
+
+---
 
 ## Features
 
-- **4 input sources**: YouTube URL, blog URL, podcast URL, raw text paste
-- **3 output formats**: LinkedIn post, LinkedIn carousel, Twitter/X thread
-- **Voice matching**: Create profiles from your real writing, AI matches your tone
-- **Multi-step AI pipeline**: Extract → Analyze → Generate (not a single-prompt wrapper)
-- **Chrome extension**: Repurpose any article while reading it
-- **Stripe billing**: Free (3 generations), Starter ($19/mo, 30/mo), Pro ($49/mo, unlimited)
-- **3D animated landing page**: React Three Fiber, cursor-reactive, scroll animations
+| Capability | Detail |
+|---|---|
+| **4 Input Sources** | YouTube URL (transcript + Gemini analysis), blog URL (Readability extraction), podcast URL, raw text paste |
+| **3 Output Formats** | LinkedIn post (150–300 words, hook-first), LinkedIn carousel (8–10 slides), X/Twitter thread (5–9 tweets) |
+| **Voice Matching** | Create profiles from your real writing samples; AI analyzes tone, structure, and vocabulary — then mirrors it in every generation |
+| **Multi-Stage AI Pipeline** | Extract → Analyze → Generate (not a single-prompt wrapper). Each stage is independently optimized and observable |
+| **Streaming Generation** | Server-sent events (SSE) stream output token-by-token; no spinner waiting |
+| **Chrome Extension** | Manifest V3 extension to repurpose any page while browsing |
+| **Stripe Billing** | Free (3 generations), Starter ($19/mo, 30/mo), Pro ($49/mo, unlimited). Checkout + Portal + idempotent webhooks |
+| **Scheduled Posting** | Schedule generated content for auto-publish via Vercel Cron (`*/5 * * * *`) |
+| **Health Checks** | `GET /api/health` — parallel probes for database, Redis, and environment integrity |
+| **Pre-Flight Verification** | `npx tsx scripts/verify-connections.ts` validates all upstream services before `npm run dev` |
+| **API Reference** | Auto-generated OpenAPI docs at `/api/scalar` via Scalar |
+
+---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 15 (App Router), Tailwind CSS, shadcn/ui, Framer Motion |
-| 3D | React Three Fiber, Three.js, @react-three/drei |
-| Backend | Next.js API Routes (serverless) |
-| Database | Supabase (PostgreSQL + pgvector + Auth + RLS) |
-| AI | Google Gemini 1.5 Flash (swappable to OpenAI) |
-| Payments | Stripe (Checkout + Billing Portal + Webhooks) |
-| Hosting | Vercel (auto-deploy from main branch) |
-| Analytics | Plausible (privacy-friendly) |
+### Frontend
+
+| Technology | Purpose |
+|---|---|
+| **Next.js 15** (App Router) | Full-stack framework — React server components, API routes, middleware |
+| **Tailwind CSS** + `tailwind-merge` | Utility-first styling with custom brand design tokens |
+| **shadcn/ui** (Radix primitives) | Accessible, unstyled component primitives |
+| **Framer Motion** 12 | Page transitions, staggered reveals, gesture-driven animations |
+| **GSAP** 3 | Scroll-triggered timeline animations on marketing pages |
+| **React Three Fiber** + Three.js + Drei | 3D interactive scene on the landing page (cursor-reactive, GLB models) |
+| **Lucide React** | Consistent icon set |
+
+### Backend & Infrastructure
+
+| Technology | Purpose |
+|---|---|
+| **Next.js API Routes** (serverless) | All backend logic — colocated with frontend, deployed as Vercel serverless functions |
+| **Neon** (serverless PostgreSQL) | Primary database — pooled connection via Prisma for serverless cold-start avoidance |
+| **Prisma** ORM | Type-safe database access, migrations, and schema management |
+| **Supabase** | Authentication (email/password + Google OAuth), legacy PostgreSQL + pgvector + RLS |
+| **Upstash Redis** (REST) | Rate limiting, session caching, lightweight job coordination |
+| **MorphLLM** (OpenAI-compatible) | Primary AI provider — fully abstracted in `lib/ai/provider.ts` for drop-in replacement |
+| **Google Gemini** | Secondary AI provider — YouTube transcript analysis, embeddings |
+| **Stripe** | Subscription billing — Checkout sessions, Billing Portal, webhook event handling |
+| **Cloudinary** | Media upload, transformation, and CDN delivery |
+| **Resend** | Transactional email (welcome emails, password resets, receipts) |
+| **Make.com** | External workflow automation hooks |
+| **Sentry** | Error monitoring — instrumented on client, server, and edge runtimes |
+| **Vercel Cron Jobs** | `vercel.json`-defined cron for `process-posts` (every 5 minutes) |
+| **JWT** (via Passport.js) | Stateless auth tokens for API client and extension authentication |
+
+---
 
 ## Architecture
 
-User inputs source (URL or text)
+```
+                         ┌─────────────────────────────┐
+                         │     Browser / Extension      │
+                         └──────────────┬──────────────┘
+                                        │
+                         ┌──────────────▼──────────────┐
+                         │    Next.js Middleware        │
+                         │  (Supabase SSR session)     │
+                         └──────────────┬──────────────┘
+                                        │
+              ┌─────────────────────────┼─────────────────────────┐
+              │                         │                         │
+     ┌────────▼──────┐      ┌──────────▼──────────┐   ┌─────────▼─────────┐
+     │  Marketing     │      │  Auth Routes        │   │  Protected App    │
+     │  Pages         │      │  (login/signup)     │   │  (dashboard/gen)  │
+     └────────┬───────┘      └──────────┬──────────┘   └─────────┬─────────┘
+              │                         │                         │
+              └──────────────┬──────────┘                         │
+                             │                                    │
+                    ┌────────▼────────┐                  ┌────────▼────────┐
+                    │   /api/health   │                  │  /api/extract   │
+                    │  (parallel      │                  │  /api/analyze   │
+                    │   probes)       │                  │  /api/generate  │
+                    └─────────────────┘                  │  (streaming)    │
+                                                          └────────┬────────┘
+                                                                   │
+              ┌─────────────────────────────────┬───────────────────┼───────────────────┬──────────────────┐
+              │                                 │                   │                   │                  │
+     ┌────────▼────────┐              ┌─────────▼────────┐ ┌───────▼────────┐ ┌───────▼────────┐ ┌───────▼────────┐
+     │   Neon (Prisma) │              │  Upstash Redis   │ │ MorphLLM/Gemini │ │   Stripe       │ │  Cloudinary    │
+     │   PostgreSQL    │              │  (cache/ratelimit)│ │ (AI Pipeline)   │ │ (billing)      │ │  (media)       │
+     └─────────────────┘              └──────────────────┘ └────────────────┘ └────────────────┘ └────────────────┘
+                                                                   │
+                                                          ┌────────▼────────┐
+                                                          │ Vercel Cron     │
+                                                          │ */5 * * * *    │
+                                                          │ /api/cron/      │
+                                                          │ process-posts   │
+                                                          └─────────────────┘
+```
 
-↓
+### AI Pipeline (3-Stage)
 
-Content Extraction (YouTube transcript / blog scraper / raw text)
+```
+                          ┌──────────┐    ┌──────────┐    ┌──────────┐
+  User Input (URL/Text) ──► Extract   ───► Analyze   ───► Generate  ──► Streamed Output
+                          └──────────┘    └──────────┘    └──────────┘
+                               │               │               │
+                         YouTube/Blog    Gemini/Morph    Format-specific
+                         Readability     extracts key    prompt + voice
+                         Podcast         hooks, topics   profile matching
+```
 
-↓
+### Security & Reliability
 
-AI Analysis (distills key insights, hook angles, quotable moments)
+- **Parallel health checks**: `GET /api/health` probes database connectivity, Redis reachability, and environment variable presence in a single request — failures are reported individually
+- **Self-healing cron**: `POST /api/cron/process-posts` is authenticated via a shared `CRON_SECRET` query parameter; the route logs failures, updates `ScheduledPost` status to `FAILED`, and continues processing remaining items
+- **Idempotent webhooks**: `POST /api/billing/webhook` uses Stripe's idempotency keys and event-level deduplication to prevent double-processing
+- **Rate limiting**: Upstash Redis-backed sliding window rate limiter on all API routes
+- **RLS enforcement**: Legacy Supabase tables enforce Row Level Security; Prisma queries scoped to authenticated user context
 
-↓
-
-AI Generation (format-specific prompt + voice profile matching)
-
-↓
-
-Streaming output → platform-specific preview → copy/save
+---
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- npm or yarn
-- Supabase account (free tier)
-- Google AI API key (free tier)
-- Stripe account (test mode)
+- Node.js 18+ (runtime)
+- A [Neon](https://neon.tech) account (serverless PostgreSQL)
+- A [Supabase](https://supabase.com) account (authentication)
+- A [MorphLLM](https://morphllm.com) API key (or any OpenAI-compatible provider)
+- A [Stripe](https://stripe.com) account (test mode)
+- An [Upstash](https://upstash.com) Redis database
+- A [Cloudinary](https://cloudinary.com) account
+- A [Resend](https://resend.com) API key
 
-### 1. Clone and install
+### 1. Clone & Install
 
 ```bash
-git clone https://github.com/your-username/repurpose-ai.git
+git clone https://github.com/your-org/repurpose-ai.git
 cd repurpose-ai
 npm install
 ```
 
-### 2. Set up environment variables
+### 2. Configure Environment Variables
 
-Copy the example file and fill in your values:
+Copy the example file:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Required variables:
+Open `.env.local` and populate every variable. Refer to the [Environment Variables](#environment-variables) section below for a complete reference.
 
-```env
-# Supabase (Settings → API in your Supabase dashboard)
-NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...
+> **Security Note**: `.env.local` is git-ignored by default. Never commit real secrets.
 
-# Google AI (https://aistudio.google.com/app/apikey)
-GOOGLE_AI_API_KEY=AIzaSy...
-AI_MODEL=gemini-1.5-flash
+### 3. Run Database Migrations
 
-# Stripe (https://dashboard.stripe.com/test/apikeys)
-STRIPE_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_STARTER_PRICE_ID=price_...
-STRIPE_PRO_PRICE_ID=price_...
+Push the Prisma schema to your Neon database:
 
-# App
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_APP_NAME=RepurposeAI
+```bash
+npx prisma generate
+npx prisma db push
 ```
 
-### 3. Set up Supabase database
+For legacy Supabase tables, run the migration files in `supabase/migrations/` via the Supabase SQL Editor in order.
 
-Go to your Supabase project → SQL Editor → run these files in order:
+### 4. Verify Connections
 
-1. `supabase/migrations/001_initial_schema.sql` (tables, RLS, triggers)
-2. `supabase/migrations/002_pgvector.sql` (vector extension + embedding column + RPC function)
+Before starting the dev server, validate that all upstream services are reachable:
 
-### 4. Set up Stripe products
+```bash
+npx tsx scripts/verify-connections.ts
+```
 
-In Stripe dashboard (test mode):
+This script calls `GET /api/health` and reports the status of:
+- ✅ Database connection (Neon via Prisma)
+- ✅ Redis reachability (Upstash)
+- ✅ Environment variable presence
 
-1. Create product "Starter" → $19/month recurring → copy Price ID
-2. Create product "Pro" → $49/month recurring → copy Price ID
-3. Paste both Price IDs into your `.env.local`
+A failure in any service will exit with code `1`. Resolve issues before proceeding.
 
-### 5. Run the development server
+### 5. Start Development
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000).
 
-### 6. Test the full flow
+### 6. Test the Full Flow
 
 1. Sign up at `/signup`
-2. Create a voice profile at `/voice` (paste 2-3 real writing examples)
-3. Go to `/generate` → paste a blog URL → select LinkedIn Post → generate
-4. Check `/history` for saved outputs
+2. Create a voice profile at `/voice` — paste 2–3 examples of your real writing
+3. Navigate to `/generate` → paste a blog URL → select **LinkedIn Post** → click **Generate**
+4. View saved outputs at `/history`
 5. Test billing at `/upgrade` (uses Stripe test mode)
+6. Browse the API reference at `/api/scalar`
+
+---
+
+## Environment Variables
+
+All configuration is managed through environment variables. Below is the complete reference grouped by service.
+
+### Neon (Serverless PostgreSQL)
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | Prisma connection string (pooled, serverless-ready) |
+
+### Supabase (Authentication)
+
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anonymous key (client-safe) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server-only, admin operations) |
+
+### MorphLLM / AI Provider
+
+| Variable | Description |
+|---|---|
+| `AI_API_KEY` | API key for the OpenAI-compatible provider |
+| `AI_BASE_URL` | Base URL (defaults to `https://api.morphllm.com/v1`) |
+| `AI_MODEL` | Model identifier (e.g., `morph-glm52-744b`) |
+
+### Stripe (Billing)
+
+| Variable | Description |
+|---|---|
+| `STRIPE_SECRET_KEY` | Stripe secret key (server-only) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (client-safe) |
+| `STRIPE_WEBHOOK_SECRET` | Webhook signing secret (Stripe dashboard → webhooks) |
+| `STRIPE_STARTER_PRICE_ID` | Price ID for the Starter plan ($19/mo) |
+| `STRIPE_PRO_PRICE_ID` | Price ID for the Pro plan ($49/mo) |
+
+### Sentry (Monitoring)
+
+| Variable | Description |
+|---|---|
+| `SENTRY_DSN` | Sentry DSN (server/edge runtime) |
+| `NEXT_PUBLIC_SENTRY_DSN` | Sentry DSN (client runtime) |
+| `SENTRY_ORG` | Sentry organization slug |
+| `SENTRY_PROJECT` | Sentry project slug |
+
+### Upstash Redis (Caching)
+
+| Variable | Description |
+|---|---|
+| `REDIS_URL` | REST API URL from Upstash console |
+| `REDIS_TOKEN` | REST API token from Upstash console |
+
+### Cron Job Security
+
+| Variable | Description |
+|---|---|
+| `CRON_SECRET` | Shared secret passed as query parameter to `/api/cron/process-posts` |
+
+### Resend (Email)
+
+| Variable | Description |
+|---|---|
+| `RESEND_API_KEY` | API key from Resend dashboard |
+
+### Cloudinary (Media)
+
+| Variable | Description |
+|---|---|
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+
+### JWT (API Auth)
+
+| Variable | Description |
+|---|---|
+| `JWT_SECRET` | HMAC secret for signing JWT tokens (generate with `openssl rand -hex 64`) |
+
+### Application
+
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_APP_URL` | Application base URL (e.g., `http://localhost:3000` or `https://your-domain.com`) |
+| `NEXT_PUBLIC_APP_NAME` | Application display name (`RepurposeAI`) |
+
+### Make.com (Automation)
+
+| Variable | Description |
+|---|---|
+| `MAKE_API_KEY` | Make.com webhook/API integration key |
+
+---
+
+## Deployment
+
+### Vercel (Recommended)
+
+The application is optimized for the Vercel serverless platform.
+
+```bash
+# Install Vercel CLI (optional)
+npm i -g vercel
+
+# Deploy
+vercel --prod
+```
+
+**Steps:**
+
+1. Push the repository to GitHub
+2. Import the repository in the [Vercel Dashboard](https://vercel.com/import)
+3. Configure **Environment Variables** in Vercel → Project Settings → Environment Variables (add every variable from `.env.local`; note that `DATABASE_URL` should use the pooled connection string for serverless)
+4. Deploy — Vercel detects Next.js automatically
+
+### Vercel Cron Configuration
+
+Scheduled posting is configured via `vercel.json`:
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/process-posts?secret=your-cron-secret",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}
+```
+
+- **Path**: The cron authenticates via the `secret` query parameter, which must match `CRON_SECRET` in your environment variables
+- **Schedule**: Every 5 minutes (`*/5 * * * *`). The handler processes all `ScheduledPost` records with `PENDING` status whose `scheduledAt` timestamp has passed
+- **Error handling**: Failed posts are marked `FAILED`; the cron continues processing remaining items without interrupting the cycle
+
+### Stripe Webhook (Production)
+
+After deploying, configure a webhook endpoint in the Stripe Dashboard:
+
+1. Navigate to **Developers → Webhooks → Add endpoint**
+2. Endpoint URL: `https://your-domain.com/api/billing/webhook`
+3. Events to listen for:
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+4. Copy the signing secret and set it as `STRIPE_WEBHOOK_SECRET` in your Vercel environment variables
+
+---
 
 ## Project Structure
 
 ```
 app/
-├── (marketing)/     Landing page, blog, pricing, legal
-├── (auth)/          Login, signup, password reset
-├── (app)/           Dashboard, generate, history, voice, settings
-└── api/             Extract, analyze, generate, voice, billing, health
+├── (marketing)/         Landing page, blog, pricing, changelog, legal
+├── (auth)/              Login, signup, password reset, callback
+├── (app)/               Dashboard, generate, history, voice, settings, upgrade
+└── api/                 Health, extract, analyze, generate, voice, billing,
+                        cron, schedule, brand-kit, webhooks, upload, usage,
+                        embeddings, scalar (API reference)
 
 components/
-├── ui/              shadcn/ui primitives (button, input, card, etc.)
-├── layout/          Sidebar, topbar, mobile nav, user menu
-├── generate/        Generation wizard components
-├── voice/           Voice profile CRUD components
-├── history/         Generation history components
-├── billing/         Pricing cards, upgrade modal
-├── marketing/       Landing page sections (3D hero, features, etc.)
-├── shared/          Logo, loading states, empty states, page header
-└── providers/       Auth, usage, toast context providers
+├── ui/                  shadcn/ui primitives (button, input, card, progress, etc.)
+├── layout/              Sidebar, topbar, mobile nav, user menu
+├── generate/            Generation wizard (input, format, voice selector, output)
+├── voice/               Voice profile CRUD
+├── history/             Generation history cards and views
+├── billing/             Pricing cards, upgrade modal
+├── marketing/           Landing page sections (3D hero, features, how-it-works, etc.)
+├── shared/              Logo, loading states, empty states, page header
+├── providers/           AuthProvider, UsageProvider, ToastProvider
+├── settings/            User settings forms
+└── dashboard/           AnalyticsWidget, ScheduleWidget
 
 lib/
-├── ai/              Gemini provider, prompts, embeddings, analyze/generate
-├── extractors/      YouTube, blog, podcast content extraction
-├── supabase/        Client, server, admin clients + types
-├── stripe/          Config + webhook helpers
-├── validations/     Zod schemas for all forms
-├── constants/       Routes, plans, output formats
-└── utils/           Helpers, formatters, rate limiter
+├── ai/                  Provider abstraction, prompt engine, Gemini client, embeddings
+├── extractors/          YouTube, blog, podcast extractors
+├── supabase/            Browser client, server client, admin client, types
+├── stripe/              Config, helpers, webhook parser
+├── auth/                JWT utilities, Passport strategies, with-auth middleware
+├── validations/         Zod schemas + DTOs for every route
+├── constants/           Routes, plan definitions, output format configs
+├── email/               Resend client
+├── jobs/                Post scheduler
+├── webhooks/            Dispatch and trigger utilities
+├── make/                Make.com integration
+├── cloudinary/          Upload and transform utilities
+├── prisma.ts            Singleton PrismaClient
+└── redis.ts             Upstash Redis singleton
 
-extension/           Chrome extension (Manifest V3)
-supabase/            Database migrations
+scripts/
+└── verify-connections.ts Pre-flight service validation
+
+extension/               Chrome extension (Manifest V3)
+
+prisma/
+└── schema.prisma        Database schema (User, VoiceProfile, Generation, ScheduledPost)
+
+supabase/
+└── migrations/          7 SQL migration files for legacy schema
 ```
 
-## Deployment
+---
 
-### Vercel (recommended)
+## Database Schema (Prisma)
 
-1. Push to GitHub
-2. Connect repo to Vercel
-3. Add all env vars in Vercel dashboard → Settings → Environment Variables
-4. Deploy (auto-deploys on push to main)
+| Model | Key Fields | Description |
+|---|---|---|
+| **User** | `id` (UUID), `email` (unique), `name` | Core user account, linked to Supabase auth |
+| **VoiceProfile** | `id`, `name`, `description`, `userId` (FK → User) | Saved writing style with tone analysis and examples |
+| **Generation** | `id`, `title`, `sourceUrl`, `content`, `userId` (FK → User), `voiceProfileId` (FK → VoiceProfile) | All generated content — input, output, metadata |
+| **ScheduledPost** | `id`, `platform` (LINKEDIN/TWITTER), `content`, `scheduledAt`, `status` (PENDING/PUBLISHED/FAILED), `userId` (FK → User) | Queued posts processed by Vercel Cron |
 
-### Stripe Webhook (production)
+All tables enforce foreign key constraints with cascade deletes where appropriate.
 
-After deploying, create a webhook in Stripe dashboard:
-
-- Endpoint URL: `https://your-domain.com/api/billing/webhook`
-- Events: `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`
-- Copy the signing secret to `STRIPE_WEBHOOK_SECRET`
-
-## Swapping AI Models
-
-The AI provider is fully abstracted in `lib/ai/provider.ts`. To switch from Gemini to OpenAI:
-
-1. Install: `npm install openai`
-2. Replace `lib/ai/provider.ts` with OpenAI client
-3. Update `AI_MODEL` env var (e.g., `gpt-4o-mini`)
-4. No other files need changes
+---
 
 ## Chrome Extension
 
-The extension lives in `/extension`. To build and test:
+The extension lives in `extension/` and uses Manifest V3.
+
+To build and test locally:
 
 1. Open `chrome://extensions` in Chrome
-2. Enable "Developer mode"
-3. Click "Load unpacked" → select the `extension/` folder
-4. Navigate to any blog article → click the extension icon
+2. Enable **Developer mode**
+3. Click **Load unpacked** → select the `extension/` directory
+4. Navigate to any blog article → click the extension icon → **Repurpose This Page**
 
-## Database Schema
+The extension injects a content script that extracts page content and sends it to the RepurposeAI API. Authentication is handled via a JWT token stored in extension storage.
 
-- `profiles`: User accounts (extends Supabase auth), plan, usage tracking
-- `voice_profiles`: Saved writing styles with tone, examples, and vector embeddings
-- `generations`: All generated content with input/output, linked to voice profiles
-- `usage_log`: Credit consumption tracking for billing
+---
 
-All tables have Row Level Security (RLS) enabled. Users can only access their own data.
+## AI Provider Abstraction
+
+The AI layer is fully abstracted behind `lib/ai/provider.ts`. To swap providers:
+
+1. Install your provider's SDK (e.g., `npm install openai`)
+2. Replace `lib/ai/provider.ts` with an OpenAI-compatible client (the interface is already a drop-in for any OpenAI-compatible API)
+3. Update `AI_API_KEY`, `AI_BASE_URL`, and `AI_MODEL` in your environment variables
+4. No other application code changes are required
+
+The provider is consumed by `lib/ai/analyze.ts`, `lib/ai/generate.ts`, and `lib/ai/embeddings.ts`.
+
+---
+
+## License
+
+[MIT](LICENSE)
+
+---
+
+<p align="center">
+  Built with Next.js 15, TypeScript, and ❤️
+  <br />
+  <a href="https://vercel.com">Deployed on Vercel</a>
+</p>
